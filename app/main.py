@@ -49,8 +49,7 @@ def get_fact(fact_id: int) -> models.ChuckNorrisFactDb:
 
 @app.get('/facts/', description='Retrieve Chuck Norris facts from the database. Optional filter on the ids to '
                                 'retrieve.', response_model=List[models.ChuckNorrisFactDb], tags=['Facts'])
-def get_facts(ids: List[int] = Query(
-    default=None, title='ids', description='The list of ids to retrieve')) -> List[models.ChuckNorrisFactDb]:
+def get_facts(ids: List[int] = Query(default=None, title='ids', description='The list of ids to retrieve')) -> List[models.ChuckNorrisFactDb]:
     try:
         facts: Optional[List[Tuple[int, str]]] = db.get_facts(ids=ids)
     except db.ObjectNotFoundError as err:
@@ -66,3 +65,53 @@ def get_facts(ids: List[int] = Query(
                             detail=f'Facts with ids {",".join(map(str, ids))} not found')
 
 
+@app.post("/facts/", description="Create a new fact from body", 
+    status_code=sc.HTTP_201_CREATED,
+    response_model=models.ChuckNorrisFactDb, tags=['Facts'])
+async def create_item(fact: str):
+    try:
+        id, fact = db.insert_fact(fact)
+    except db.ObjectNotFoundError as err:
+        raise HTTPException(status_code=sc.HTTP_404_NOT_FOUND, detail=str(err))
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=sc.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+    chuck_norris_fact_db = lambda id, fact: models.ChuckNorrisFactDb(id=id, fact=fact)
+    if id:
+        return chuck_norris_fact_db(id, fact)
+    else:
+        raise HTTPException(status_code=sc.HTTP_403_FORBIDDEN,
+                            detail=f'Cannot insert fact')
+
+@app.put('/fact/{fact_id}', description='Update a Chuck Norris fact from its id',
+         status_code=sc.HTTP_204_NO_CONTENT, tags=['Facts'])
+def put_fact(fact_id: int, fact: str) -> models.ChuckNorrisFactDb:
+    try:
+        fact_ori = db.update_fact(fact_id, fact)
+    except db.ObjectNotFoundError as e:
+        raise HTTPException(
+            status_code=sc.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=sc.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f'Error while retrieving fact with id {fact_id}: {e}'
+        )
+
+@app.delete('/fact/{fact_id}', description='Remove a Chuck Norris fact from its id',
+         status_code=sc.HTTP_204_NO_CONTENT, tags=['Facts'])
+def delete_fact(fact_id: int) -> models.ChuckNorrisFactDb:
+    try:
+        db.delete_fact(fact_id)
+    except db.ObjectNotFoundError as e:
+        raise HTTPException(
+            status_code=sc.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=sc.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f'Error while retrieving fact with id {fact_id}: {e}'
+        )
+    

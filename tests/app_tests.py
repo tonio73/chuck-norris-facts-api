@@ -27,3 +27,9 @@ class AppTests(unittest.TestCase):
         self.assertEqual(response.status_code, sc.HTTP_200_OK)
         facts = [ChuckNorrisFactDb.parse_obj(fact) for fact in response.json()]
         self.assertEqual(len(facts), 10)
+
+    def test_delete_fact(self):
+        response = client.delete('/fact/8')
+        self.assertEqual(response.status_code, sc.HTTP_204_NO_CONTENT)
+        response = client.get('/fact/8')
+        self.assertEqual(response.status_code, sc.HTTP_404_NOT_FOUND)

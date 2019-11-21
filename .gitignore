@@ -1,6 +1,6 @@
 .idea/*
 venv/*
-venve_test/*
+venv_test/*
 test_venv/*
 *__pycache__*
 *.env

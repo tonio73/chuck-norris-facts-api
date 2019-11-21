@@ -71,8 +71,6 @@ def get_facts(ids: List[int] = Query(default=None, title='ids', description='The
 async def create_item(fact: str):
     try:
         id, fact = db.insert_fact(fact)
-    except db.ObjectNotFoundError as err:
-        raise HTTPException(status_code=sc.HTTP_404_NOT_FOUND, detail=str(err))
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=sc.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
@@ -85,9 +83,9 @@ async def create_item(fact: str):
 
 @app.put('/fact/{fact_id}', description='Update a Chuck Norris fact from its id',
          status_code=sc.HTTP_204_NO_CONTENT, tags=['Facts'])
-def put_fact(fact_id: int, fact: str) -> models.ChuckNorrisFactDb:
+def put_fact(fact_id: int, fact: str):
     try:
-        fact_ori = db.update_fact(fact_id, fact)
+        db.update_fact(fact_id, fact)
     except db.ObjectNotFoundError as e:
         raise HTTPException(
             status_code=sc.HTTP_404_NOT_FOUND,
@@ -101,7 +99,7 @@ def put_fact(fact_id: int, fact: str) -> models.ChuckNorrisFactDb:
 
 @app.delete('/fact/{fact_id}', description='Remove a Chuck Norris fact from its id',
          status_code=sc.HTTP_204_NO_CONTENT, tags=['Facts'])
-def delete_fact(fact_id: int) -> models.ChuckNorrisFactDb:
+def delete_fact(fact_id: int):
     try:
         db.delete_fact(fact_id)
     except db.ObjectNotFoundError as e:

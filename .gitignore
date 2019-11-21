@@ -3,3 +3,4 @@ venv/*
 test_venv/*
 *__pycache__*
 *.env
+credentials/*

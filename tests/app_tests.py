@@ -33,3 +33,5 @@ class AppTests(unittest.TestCase):
         self.assertEqual(response.status_code, sc.HTTP_204_NO_CONTENT)
         response = client.get('/fact/8')
         self.assertEqual(response.status_code, sc.HTTP_404_NOT_FOUND)
+        response = client.post('/facts/?fact=zzz')
+        self.assertEqual(response.status_code, sc.HTTP_201_CREATED)
